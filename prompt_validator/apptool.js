@@ -29,9 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  // Phrase regex that works with punctuation phrases like "thanks," or "sorry!"
+  // Phrases with punctuation like "thanks," or "sorry!"
   // Boundary = start OR non-word char on left, and end OR non-word char on right
-  // Uses a capturing group on the left boundary so we can keep correct start index later.
+  // Left boundary is captured so we can compute correct "start" index for highlighting.
   function buildChunkedPhraseRegexes(phrases, chunkSize){
     const cleaned = uniqLower(phrases).filter(p => p.length >= 2 && p.length <= 120);
     const out = [];
@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================
-  // Phrase DB (kept as-is)
+  // Phrase DB (full lists)
   // =========================================================
   const POLITENESS = [
     "hi", "hello", "dear", "lovely", "friend", "disturb",
@@ -221,14 +221,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const BAD_PATTERNS  = buildChunkedPhraseRegexes(BAD_BASE, 140);
   const WARN_PATTERNS = buildChunkedPhraseRegexes(WARN_BASE, 140);
 
-  // Extra explicit patterns (fixed)
   const EXTRA_EXPLICIT = [
     /\bso(?:\s*\.{2,}|…)/gi,
     /\bif\s+you\s+have\s+a\s+time\b/gi
   ];
 
   // =========================================================
-  // UI / Highlight engine
+  // DOM
   // =========================================================
   const input = document.getElementById("input");
   const highlighted = document.getElementById("highlighted");
@@ -249,12 +248,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // =========================================================
+  // UI helpers
+  // =========================================================
   function showToast(message, icon="✨"){
     toastIcon.textContent = icon;
     toastText.textContent = message;
     toast.classList.add("show");
-    window.clearTimeout(showToast._t);
-    showToast._t = window.setTimeout(() => toast.classList.remove("show"), 1400);
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove("show"), 1400);
   }
 
   function setStatus(kind, text){
@@ -262,9 +264,6 @@ document.addEventListener("DOMContentLoaded", () => {
     statusText.textContent = text;
   }
 
-  // ==========================
-  // chars + words
-  // ==========================
   function countWords(text){
     const trimmed = String(text || "").trim();
     if (!trimmed) return 0;
@@ -275,11 +274,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const text = input.value || "";
     const chars = text.length;
     const words = countWords(text);
-
-    const countsText = document.getElementById("countsText");
-    if (countsText){
-      countsText.textContent = `${chars.toLocaleString()} chars • ${words.toLocaleString()} words`;
-    }
+    const el = document.getElementById("countsText");
+    if (el) el.textContent = `${chars.toLocaleString()} chars • ${words.toLocaleString()} words`;
   }
 
   function syncScroll(){
@@ -287,13 +283,15 @@ document.addEventListener("DOMContentLoaded", () => {
     highlighted.scrollLeft = input.scrollLeft;
   }
 
+  // =========================================================
+  // Match finding
+  // =========================================================
   function findMatchesByRegexes(text, regexes, cls){
     const hits = [];
     for (const re of regexes){
       re.lastIndex = 0;
       let m;
       while ((m = re.exec(text)) !== null){
-        // m[0] includes left-boundary capture; m[1] is the boundary itself.
         const boundary = m[1] || "";
         const start = m.index + boundary.length;
         const end = m.index + m[0].length;
@@ -309,7 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
     hits.push(...findMatchesByRegexes(text, BAD_PATTERNS, "bad"));
     hits.push(...findMatchesByRegexes(text, WARN_PATTERNS, "warn"));
 
-    // Extra explicit patterns -> warn
     for (const re of EXTRA_EXPLICIT){
       re.lastIndex = 0;
       let m;
@@ -319,7 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Question heuristic: highlight '?' if sentence looks requesty
+    // heuristic: highlight '?' if requesty sentence
     const requesty = /\b(can|could|would|should|may|might)\s+you\b/i;
     const reQ = /[^.!?\n]*\?+/g;
     let qm;
@@ -332,11 +329,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     }
+
     return hits;
   }
 
   function mergeHits(hits){
-    // Sort by start asc, and for same start prefer longer span, and "bad" over "warn"
     hits.sort((a,b) => {
       if (a.start !== b.start) return a.start - b.start;
       if (a.end !== b.end) return b.end - a.end;
@@ -348,20 +345,14 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const h of hits){
       if (h.start < 0 || h.end <= h.start) continue;
       const last = out[out.length - 1];
-      if (!last){
-        out.push({ ...h });
-        continue;
-      }
+      if (!last){ out.push({ ...h }); continue; }
 
-      // Non-overlapping
       if (h.start >= last.end){
         out.push({ ...h });
         continue;
       }
 
-      // Overlapping: "bad" wins within overlap
       if (last.cls === h.cls){
-        // same class: extend last
         last.end = Math.max(last.end, h.end);
         continue;
       }
@@ -369,28 +360,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const bad = (last.cls === "bad") ? last : h;
       const warn = (last.cls === "warn") ? last : h;
 
-      // If bad starts inside warn, split warn before bad
       if (warn.start < bad.start){
-        warn.end = bad.start; // truncate warn
+        warn.end = bad.start;
         if (warn.end > warn.start) out[out.length - 1] = warn;
         else out.pop();
         out.push({ ...bad });
       } else {
-        // bad begins at/ before warn: replace last with bad (already better)
         out[out.length - 1] = { ...bad };
       }
     }
 
-    // Final cleanup: remove zero-len and merge adjacent same-class
     const cleaned = [];
     for (const h of out){
       if (h.end <= h.start) continue;
       const last = cleaned[cleaned.length - 1];
-      if (last && last.cls === h.cls && last.end === h.start){
-        last.end = h.end;
-      } else {
-        cleaned.push(h);
-      }
+      if (last && last.cls === h.cls && last.end === h.start) last.end = h.end;
+      else cleaned.push(h);
     }
     return cleaned;
   }
@@ -410,8 +395,25 @@ document.addEventListener("DOMContentLoaded", () => {
     return html || "&nbsp;";
   }
 
+  // =========================================================
+  // Render / Validate
+  // =========================================================
+  function renderPlain(){
+    // dôležité: pri písaní musí byť text viditeľný (cez <pre>)
+    const text = input.value || "";
+    highlighted.textContent = text || "";
+    if (!text) highlighted.innerHTML = "&nbsp;";
+  }
+
   function validate(){
     const text = input.value || "";
+    if (!text.trim()){
+      highlighted.innerHTML = "&nbsp;";
+      matchText.textContent = "0 issues";
+      setStatus("", "Paste a prompt to validate.");
+      return;
+    }
+
     const spans = mergeHits(findAllMatches(text));
     highlighted.innerHTML = buildHighlightedHtml(text, spans);
 
@@ -419,14 +421,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const warnCount = spans.filter(s => s.cls === "warn").length;
     const total = spans.length;
 
-    matchText.textContent = `${total} issue${total === 1 ? "" : "s"} (${badCount} strong, ${warnCount} mild)`;
-
-    if (!text.trim()){
-      setStatus("", "Paste a prompt to validate.");
-      highlighted.innerHTML = "&nbsp;";
-      matchText.textContent = "0 issues";
-      return;
-    }
+    matchText.textContent =
+      `${total} issue${total === 1 ? "" : "s"} (${badCount} strong, ${warnCount} mild)`;
 
     if (total === 0) setStatus("ok", "Looks tight and direct.");
     else if (badCount > 0) setStatus("bad", "Remove red highlights for stronger prompts.");
@@ -435,12 +431,15 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast("Validated & highlighted", "✅");
   }
 
-  function refreshPlain(){
-    highlighted.textContent = input.value || "";
-  }
+  // =========================================================
+  // Events
+  // =========================================================
+  let validatedOnce = false;
 
-  // Buttons
-  btnValidate.addEventListener("click", validate);
+  btnValidate.addEventListener("click", () => {
+    validatedOnce = true;
+    validate();
+  });
 
   btnCopy.addEventListener("click", async () => {
     try{
@@ -455,21 +454,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnClear.addEventListener("click", () => {
     input.value = "";
-    refreshPlain();
+    validatedOnce = false;
     updateCounts();
-    setStatus("", "Cleared.");
+    highlighted.innerHTML = "&nbsp;";
     matchText.textContent = "0 issues";
+    setStatus("", "Cleared.");
     showToast("Cleared", "🧹");
     input.focus();
   });
 
-  // Live
-  let validatedOnce = false;
   input.addEventListener("input", () => {
     updateCounts();
+
+    // vždy najprv ukáž plain text (aby si ho hneď videl)
+    renderPlain();
+
+    // ak už bolo validate aspoň raz, highlightuj live
     if (validatedOnce) validate();
-    else refreshPlain();
   });
+
   input.addEventListener("scroll", syncScroll);
 
   document.addEventListener("keydown", (e) => {
@@ -479,10 +482,9 @@ document.addEventListener("DOMContentLoaded", () => {
       validate();
     }
   });
-  btnValidate.addEventListener("click", () => { validatedOnce = true; });
 
   // Init
-  refreshPlain();
+  highlighted.innerHTML = "&nbsp;";
   updateCounts();
   setStatus("", "Not validated yet.");
 });
