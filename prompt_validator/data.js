@@ -79,3 +79,5 @@ const HIGH_IMPACT = [
         "section","segment","block","chunk","unit","component","module","element","node","item",
         "entry","record","row","column","field","attribute","property","parameter","argument","token"
       ];
+
+console.log("data.js loaded");
