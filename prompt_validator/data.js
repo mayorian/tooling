@@ -25,23 +25,17 @@ const HIGH_IMPACT = [
         "whenever possible","as best as you can","at least",
         "feel free to","take your time","no rush",
         "just wanted to","just asking","just checking",
-
-        "important","relevant","significant","meaningful","main","critical","notable","essential","major",
-        "minor","valuable","useful","interesting","highlighted","prioritized","core","primary","secondary","vital",
-
-        "evaluate","assess","deduce","understand","decide",
-        "judge","estimate","predict","assume","conclude","explain","simplify","describe",
+        "judge",
 
         "anything","nothing","various","numerous","countless","miscellaneous",
         "subset","portion",
 
         "modern","historical","formerly",
-        "soon","eventually","now","yesterday","tomorrow","ongoing","future",
 
         "unless","therefore","however","although",
         "meanwhile","whereas","instead","likewise","similarly","alternatively","consequently","notwithstanding",
 
-        "story","narrative","context","background","idea","concept","theme","tone","intent","purpose"
+       "narrative","background","idea","theme"
       ];
 
       const MEDIUM_IMPACT = [
@@ -52,15 +46,15 @@ const HIGH_IMPACT = [
         "often","sometimes","maybe","perhaps","possibly","probably","likely","unlikely","somewhat","roughly",
 
         "before","after","suitable","usable","possible",
-        "around","about","approximately","near","close","similar","linked",
+        "around","about","approximately","near","close",
 
-        "few","some","several","many","least","more","less","enough","plenty",
-        "varied","common","rare","frequent","occasional","regular","irregular","standard","custom",
+        "few","some","several","many","least","enough","plenty",
+        "varied","rare","frequent","occasional","regular","irregular","standard","custom",
 
         "show","display","mention","note",
         "share","expose","surface","gather","compile","organize",
 
-        "flag","mark","pick",
+        "pick",
       ];
 
       const LOW_IMPACT = [
