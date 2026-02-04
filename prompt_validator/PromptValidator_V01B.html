@@ -1,1 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prompt Validation Tool</title>
 
+    <style>
+        :root {
+            --bg: #07080c;
+            --panel: rgba(255,255,255,.06);
+            --panel2: rgba(255,255,255,.03);
+            --stroke: rgba(255,255,255,.14);
+            --text: rgba(255,255,255,.92);
+            --muted: rgba(255,255,255,.62);
+            --accent: #7cf7d4;
+            --accent2: #7aa7ff;
+            --danger: #ff4b6e;
+            --warn: #ffb24a;
+            --info: #56b7ff;
+            --radius: 18px;
+            --shadow: 0 18px 60px rgba(0,0,0,.55);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 40px 18px;
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: radial-gradient(1100px 700px at 20% 12%, rgba(124,247,212,.12), transparent 55%), radial-gradient(900px 650px at 85% 20%, rgba(122,167,255,.11), transparent 55%), radial-gradient(900px 700px at 45% 90%, rgba(255,75,110,.09), transparent 55%), linear-gradient(180deg, #05060a, var(--bg));
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            display: grid;
+            gap: 16px;
+        }
+
+        header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .headline {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        h3 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: .3px;
+            font-weight: 750;
+        }
+
+        .sub {
+            margin: 0;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .kbd {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: rgba(255,255,255,.72);
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(0,0,0,.25);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel {
+            border-radius: var(--radius);
+            border: 1px solid var(--stroke);
+            background: linear-gradient(180deg, var(--panel), var(--panel2));
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            position: relative;
+        }
+
+            /* subtle “grid” overlay */
+            .panel::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+                background-size: 28px 28px;
+                opacity: .25;
+                pointer-events: none;
+            }
+
+        .toolbar {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px;
+            border-bottom: 1px solid rgba(255,255,255,.10);
+            background: rgba(0,0,0,.22);
+            backdrop-filter: blur(12px);
+        }
+
+        .left, .right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status {
+            font-size: 12px;
+            color: var(--muted);
+            min-height: 16px;
+        }
+
+        /* Switch */
+        .switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,.14);
+            background: rgba(0,0,0,.22);
+        }
+
+            .switch input {
+                appearance: none;
+                width: 42px;
+                height: 22px;
+                border-radius: 999px;
+                background: rgba(255,255,255,.10);
+                border: 1px solid rgba(255,255,255,.16);
+                position: relative;
+                cursor: pointer;
+                outline: none;
+                transition: .18s ease;
+            }
+
+                .switch input::after {
+                    content: "";
+                    position: absolute;
+                    top: 50%;
+                    left: 3px;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    transform: translateY(-50%);
+                    background: rgba(255,255,255,.85);
+                    transition: .18s ease;
+                    box-shadow: 0 6px 16px rgba(0,0,0,.35);
+                }
+
+                .switch input:checked {
+                    background: rgba(124,247,212,.22);
+                    border-color: rgba(124,247,212,.35);
+                }
+
+                    .switch input:checked::after {
+                        left: 22px;
+                        background: rgba(255,255,255,.95);
+                        box-shadow: 0 0 18px rgba(124,247,212,.25), 0 6px 16px rgba(0,0,0,.35);
+                    }
+
+            .switch label {
+                cursor: pointer;
+                user-select: none;
+                font-size: 13px;
+                letter-spacing: .2px;
+            }
+
+        .btn {
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,.14);
+            background: rgba(255,255,255,.06);
+            color: var(--text);
+            padding: 9px 12px;
+            border-radius: 14px;
+            font-size: 13px;
+            letter-spacing: .2px;
+            transition: transform .12s ease, border-color .18s ease, background .18s ease;
+            box-shadow: 0 12px 26px rgba(0,0,0,.28);
+            backdrop-filter: blur(10px);
+        }
+
+            .btn:hover {
+                transform: translateY(-1px);
+                border-color: rgba(124,247,212,.35);
+                background: rgba(124,247,212,.08);
+            }
+
+            .btn:active {
+                transform: translateY(0);
+            }
+
+            .btn.primary {
+                border-color: rgba(122,167,255,.32);
+                background: rgba(122,167,255,.10);
+            }
+
+                .btn.primary:hover {
+                    border-color: rgba(122,167,255,.55);
+                    background: rgba(122,167,255,.16);
+                }
+
+        .stage {
+            position: relative;
+            z-index: 1;
+            padding: 14px;
+        }
+
+        /* IMPORTANT: allow mouse resizing */
+        textarea {
+            width: 100%;
+            min-height: 260px;
+            height: 260px; /* default height */
+            resize: both; /* <- mouse resizable */
+            overflow: auto;
+            display: block;
+            padding: 14px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.14);
+            background: rgba(0,0,0,.30);
+            color: rgba(255,255,255,.92);
+            outline: none;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 14px;
+            line-height: 1.55;
+            caret-color: var(--accent);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+        }
+
+            textarea::placeholder {
+                color: rgba(255,255,255,.42);
+            }
+
+            textarea:focus {
+                border-color: rgba(124,247,212,.35);
+                box-shadow: inset 0 0 0 1px rgba(124,247,212,.12), 0 0 0 4px rgba(124,247,212,.10);
+            }
+
+        /* Highlight overlay: sits on top of textarea text area area */
+        .overlayWrap {
+            position: relative;
+        }
+
+        .highlight {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            /* Match textarea visual box exactly */
+            padding: 14px 14px;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 14px;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: transparent; /* base text invisible */
+            background: transparent;
+            overflow: hidden; /* we sync scroll */
+        }
+
+        /* highlighted words */
+        .high-impact {
+            color: var(--danger);
+            font-weight: 800;
+            text-shadow: 0 0 14px rgba(255,75,110,.20);
+        }
+
+        .medium-impact {
+            color: var(--warn);
+            font-weight: 800;
+            text-shadow: 0 0 14px rgba(255,178,74,.18);
+        }
+
+        .low-impact {
+            color: var(--info);
+            font-weight: 800;
+            text-shadow: 0 0 14px rgba(86,183,255,.18);
+        }
+
+        .footerHints {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 0 14px 14px 14px;
+            color: rgba(255,255,255,.60);
+            font-size: 12px;
+        }
+
+        .tag {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(0,0,0,.18);
+        }
+
+            .tag b {
+                color: rgba(255,255,255,.86);
+            }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="headline">
+                <h3>Prompt Validation Tool</h3>
+                <p class="sub">Realtime static analysis.</p>
+            </div>
+            <div class="kbd"> TIP </div>
+        </header>
+
+        <div class="panel">
+            <div class="toolbar">
+                <div class="left">
+                    <div class="switch">
+                        <input id="validateToggle" type="checkbox" checked />
+                        <label for="validateToggle">Validate</label>
+                    </div>
+                    <div class="status" id="statusText">Validation: ON</div>
+                </div>
+
+                <div class="right">
+                    <button class="btn primary" id="copyBtn" type="button">Copy</button>
+                    <button class="btn" id="clearBtn" type="button">Clear</button>
+                </div>
+            </div>
+
+            <div class="stage">
+                <div class="overlayWrap">
+                    <div id="highlight" class="highlight"></div>
+                    <textarea id="textarea" placeholder="Try words like crash, warning, info..."></textarea>
+                </div>
+            </div>
+
+            <div class="footerHints">
+                <span class="tag"><b>High</b>: red</span>
+                <span class="tag"><b>Medium</b>: amber</span>
+                <span class="tag"><b>Low</b>: blue</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- load the file from jsDelivr -->
+    <script src="https://cdn.jsdelivr.net/gh/mayorian/tooling@main/prompt_validator/data.js"></script>
+
+    <script>
+    const textarea = document.getElementById("textarea");
+    const highlight = document.getElementById("highlight");
+
+    const validateToggle = document.getElementById("validateToggle");
+    const statusText = document.getElementById("statusText");
+    const copyBtn = document.getElementById("copyBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function highlightWords(text, words, className) {
+      if (!words?.length) return text;
+      const regex = new RegExp(`\\b(${words.join("|")})\\b`, "gi");
+      return text.replace(regex, `<span class="${className}">$1</span>`);
+    }
+
+    function updateHighlight() {
+      let text = escapeHtml(textarea.value);
+
+      if (validateToggle.checked) {
+        text = highlightWords(text, HIGH_IMPACT, "high-impact");
+        text = highlightWords(text, MEDIUM_IMPACT, "medium-impact");
+        text = highlightWords(text, LOW_IMPACT, "low-impact");
+      }
+
+      highlight.innerHTML = text || ""; // keep empty clean
+      syncOverlayBox();
+      syncScroll();
+    }
+
+    function syncScroll() {
+      highlight.scrollTop = textarea.scrollTop;
+      highlight.scrollLeft = textarea.scrollLeft;
+    }
+
+    // Keep overlay aligned to the textarea size as the user resizes
+    function syncOverlayBox() {
+      // We copy the textarea's current pixel height so the overlay matches during resize
+      const h = textarea.offsetHeight;
+      highlight.style.height = h + "px";
+    }
+
+    // --- Validation toggle: add/remove input listener ---
+    function onInput() {
+      updateHighlight();
+    }
+
+    function setValidation(enabled) {
+      textarea.removeEventListener("input", onInput);
+
+      if (enabled) {
+        textarea.addEventListener("input", onInput);
+        statusText.textContent = "Validation: ON";
+      } else {
+        statusText.textContent = "Validation: OFF";
+      }
+
+      updateHighlight();
+    }
+
+    validateToggle.addEventListener("change", () => {
+      setValidation(validateToggle.checked);
+    });
+
+    // --- Copy button ---
+    async function copyText() {
+      const text = textarea.value;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        statusText.textContent = "Copied ✅";
+      } catch (err) {
+        textarea.focus();
+        textarea.select();
+        const ok = document.execCommand("copy");
+        statusText.textContent = ok ? "Copied ✅" : "Copy failed ❌";
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      }
+
+      setTimeout(() => {
+        statusText.textContent = validateToggle.checked ? "Validation: ON" : "Validation: OFF";
+      }, 1200);
+    }
+
+    copyBtn.addEventListener("click", copyText);
+
+    // --- Clear button ---
+    clearBtn.addEventListener("click", () => {
+      textarea.value = "";
+      updateHighlight();
+      statusText.textContent = "Cleared ✨";
+      setTimeout(() => {
+        statusText.textContent = validateToggle.checked ? "Validation: ON" : "Validation: OFF";
+      }, 900);
+      textarea.focus();
+    });
+
+    textarea.addEventListener("scroll", syncScroll);
+
+    // Track resizing continuously (works while dragging the resize handle)
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(() => {
+        syncOverlayBox();
+        syncScroll();
+      });
+      ro.observe(textarea);
+    } else {
+      // Fallback: periodically sync (older browsers)
+      setInterval(() => {
+        syncOverlayBox();
+        syncScroll();
+      }, 200);
+    }
+
+    // init
+    setValidation(true);
+    updateHighlight();
+    </script>
+</body>
+</html>
