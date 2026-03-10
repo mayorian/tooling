@@ -33,7 +33,8 @@ const MEDIUM_IMPACT = [
   "please","kindly","just","simply","basically","generally","normally","usually",
   "sometimes","maybe","perhaps","somewhat",
   "few","some","several","many","least","enough","plenty",
-  "rare","occasional"
+  "rare","occasional",
+  "hello"
 ];
 
 const LOW_IMPACT = [
