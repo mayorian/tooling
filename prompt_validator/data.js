@@ -14,7 +14,7 @@ const HIGH_IMPACT = [
         "please do","please try","please make sure","please ensure",
         "if you can","if possible","when you can","at your convenience",
         "would you","could you","can you","may you","might you",
-        "i would like you to","i want you to","i would appreciate","i would like to"
+        "i would like you to","i want you to","i would appreciate","i would like to",
         "it would be great if","it would help if","i kindly ask",
         "i respectfully ask","i request that","i hope you can",
         "do me a favor","as a favor","with thanks","many thanks",
