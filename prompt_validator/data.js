@@ -15,7 +15,7 @@ const HIGH_IMPACT = [
         "if you can","if possible","when you can","at your convenience",
         "would you","could you","can you","may you","might you",
         "i would like you to","i want you to","i would appreciate","i would like to",
-        "it would be great if","it would help if","i kindly ask",
+        "it would be great if","it would help if","i kindly ask", "i need to",
         "i respectfully ask","i request that","i hope you can",
         "do me a favor","as a favor","with thanks","many thanks",
         "thanks in advance","much appreciated","your help is appreciated",
@@ -27,7 +27,7 @@ const HIGH_IMPACT = [
       ];
 
       const MEDIUM_IMPACT = [
-        "can","could","would","should","shall","may","might","must","want","wish",
+        "ask","can","could","would","should","shall","may","might","must","want","wish",
         "hope","plan","try","attempt","prefer",
         "unless","therefore","however","although", "meanwhile",
         "please","kindly","just","simply","basically","generally","normally","usually",
