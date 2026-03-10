@@ -23,7 +23,8 @@ const HIGH_IMPACT = [
   "if it’s not too much trouble","if you don’t mind",
   "whenever possible","as best as you can","at least",
   "feel free to","take your time","no rush",
-  "just wanted to","just asking"
+  "just wanted to","just asking", 
+  "you have a time"
 ];
 
 const MEDIUM_IMPACT = [
