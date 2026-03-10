@@ -1,7 +1,7 @@
 const HIGH_IMPACT = [
   "sorry","apologize","apology","apologies","apologetic","regret","regrets","regretful",
   "my bad","pardon","pardon me","excuse me","excuse","forgive me","forgiveness",
-  "oops","whoops",
+  "oops","whoops","disturbing",
   "I’m afraid","unfortunately","sadly","I regret to say","please forgive","beg your pardon",
   "not my intention",
   "please","kindly","thanks","thankyou","thx","I appreciate",
